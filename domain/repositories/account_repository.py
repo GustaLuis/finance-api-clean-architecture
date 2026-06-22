@@ -13,3 +13,7 @@ class AccountRepository(ABC):
     @abstractmethod
     async def save(self, account: Account) -> None:
         ...
+
+    @abstractmethod
+    async def list_by_user(self, user_id: UUID) -> list[Account]:
+        ...

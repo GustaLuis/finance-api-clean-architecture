@@ -1,93 +1,65 @@
-# 🏦 Finance API — Clean Architecture
+# Finance API
 
-API REST de finanças pessoais construída com **FastAPI**, estruturada seguindo os princípios da **Clean Architecture** (Ports & Adapters), como projeto de estudo de arquitetura de software backend.
+API REST para controle financeiro pessoal, construída com FastAPI e estruturada seguindo os princípios da Clean Architecture.
 
-## 🎯 Objetivo
+Projeto pessoal para estudo de arquitetura de software backend — o domínio (regras de negócio) é mantido isolado de detalhes de implementação como framework web e banco de dados, permitindo testar e evoluir a lógica de negócio sem depender de infraestrutura externa.
 
-Este projeto não é só mais um CRUD — o foco é praticar **separação de responsabilidades** e **inversão de dependência**: as regras de negócio (domínio) não conhecem detalhes de banco de dados, framework web ou qualquer infraestrutura externa.
+## Arquitetura
 
-## 🧱 Arquitetura
-
-```
-domain/             → entidades e regras de negócio puras (sem dependências externas)
-application/        → casos de uso, orquestram o domínio
-infrastructure/      → implementações concretas (FastAPI, SQLAlchemy, JWT, etc.)
-```
-
-A regra de ouro: **as dependências sempre apontam para dentro**.
+O código é organizado em três camadas, com a regra de que as dependências sempre apontam para dentro:
 
 ```
 infrastructure  →  application  →  domain
-   (sabe de tudo)   (sabe do domain)   (não sabe de nada externo)
 ```
 
-- `domain/` nunca importa nada de `infrastructure/`
-- `application/` depende apenas de `domain/` (recebe implementações via injeção de dependência)
-- `infrastructure/` implementa as interfaces definidas em `domain/repositories/`
+- **domain/** — entidades e regras de negócio puras. Não importa nada de FastAPI, SQLAlchemy ou Pydantic.
+- **application/** — casos de uso que orquestram as entidades de domínio. Depende apenas de `domain/`, recebendo implementações concretas via injeção de dependência.
+- **infrastructure/** — implementações concretas: endpoints FastAPI, modelos SQLAlchemy, schemas Pydantic.
 
-## 📂 Estrutura de pastas
+`domain/` define interfaces abstratas de repositório (`AccountRepository`, `TransactionRepository`); `infrastructure/` as implementa usando SQLAlchemy. Isso mantém os casos de uso testáveis sem necessidade de um banco de dados real — em testes, as interfaces podem ser substituídas por implementações in-memory.
 
 ```
-finance-api-clean-architecture/
-├── domain/
-│   ├── entities/              # Account, Transaction — regras de negócio
-│   ├── repositories/          # interfaces abstratas (ports)
-│   └── exceptions.py          # exceções de domínio
-├── application/
-│   ├── use_cases/             # ex: CreateTransactionUseCase
-│   └── dtos/                  # objetos de entrada/saída dos use cases
-├── infrastructure/
-│   ├── database/
-│   │   ├── models.py          # modelos SQLAlchemy
-│   │   ├── session.py
-│   │   └── repositories/      # implementações concretas dos repositórios
-│   └── web/
-│       ├── routers/           # endpoints FastAPI
-│       ├── schemas/           # Pydantic (request/response)
-│       └── dependencies.py    # injeção de dependência (Depends)
-├── tests/
-├── main.py
-└── requirements.txt
+domain/
+├── entities/          # Account, Transaction — dados e regras de negócio
+├── repositories/       # interfaces abstratas (ports)
+└── exceptions.py
+
+application/
+├── use_cases/          # ex: CreateTransactionUseCase
+└── dtos/                # objetos de entrada/saída dos use cases
+
+infrastructure/
+├── database/
+│   ├── models.py        # modelos SQLAlchemy
+│   └── repositories/    # implementações concretas dos repositórios
+└── web/
+    ├── routers/          # endpoints FastAPI
+    ├── schemas/          # validação Pydantic
+    └── dependencies.py   # injeção de dependência
 ```
 
-## ✅ Implementado até agora
-
-- [x] Entidade `Account` com regras de saque/depósito (`withdraw`, `deposit`)
-- [x] Entidade `Transaction`
-- [x] Interfaces de repositório (`AccountRepository`, `TransactionRepository`)
-- [x] Caso de uso `CreateTransactionUseCase`
-- [x] Implementação SQLAlchemy dos repositórios (SQLite + async)
-- [x] Endpoint `POST /transactions/`
-
-## 🚧 Próximos passos
-
-- [ ] Cadastro e autenticação de usuário (JWT)
-- [ ] CRUD de contas (`Account`)
-- [ ] Transferência entre contas
-- [ ] Listagem e relatório de transações por categoria
-- [ ] Testes unitários dos use cases com repositórios fake (in-memory)
-- [ ] Testes de integração dos endpoints (TestClient)
-
-## 🚀 Como rodar
-
-```bash
-# Criar e ativar ambiente virtual
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-.venv\Scripts\activate     # Windows
-
-# Instalar dependências
-pip install -r requirements.txt
-
-# Rodar em modo desenvolvimento
-fastapi dev main.py
-```
-
-A documentação interativa fica disponível em `http://localhost:8000/docs`.
-
-## 🛠️ Stack
+## Stack
 
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [SQLAlchemy 2.0](https://www.sqlalchemy.org/) (async)
 - [Pydantic v2](https://docs.pydantic.dev/)
-- SQLite (banco local de desenvolvimento)
+- SQLite (desenvolvimento local)
+
+## Como rodar
+
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+
+fastapi dev main.py
+```
+
+Documentação interativa disponível em `http://localhost:8000/docs`.
+
+## Status atual
+
+O domínio modela contas (`Account`) e transações (`Transaction`), com a regra de saldo (saque/depósito) encapsulada na própria entidade. O endpoint `POST /transactions/` está funcional, criando uma transação e atualizando o saldo da conta correspondente.
+
+Em desenvolvimento: CRUD completo de contas, autenticação via JWT, transferência entre contas, relatórios por categoria e cobertura de testes.

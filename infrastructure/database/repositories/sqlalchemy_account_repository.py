@@ -35,6 +35,13 @@ class SQLAlchemyAccountRepository(AccountRepository):
         model.name = account.name
         model.balance = account.balance
         await self._session.commit()
+    
+    async def list_by_user(self, user_id: UUID) -> list[Account]:
+        result = await self._session.execute(
+            select(AccountModel).where(AccountModel.user_id == str(user_id))
+        )
+        models = result.scalars().all()
+        return [self._to_entity(model) for model in models]
 
     @staticmethod
     def _to_entity(model: AccountModel) -> Account:

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from infrastructure.database.models import Base
 from infrastructure.database.session import engine
-from infrastructure.web.routers import transaction_router
+from infrastructure.web.routers import transaction_router, account_router
 
 
 @asynccontextmanager
@@ -16,6 +16,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Finance API", lifespan=lifespan)
 app.include_router(transaction_router.router)
+app.include_router(account_router.router)
 
 
 @app.get("/")
